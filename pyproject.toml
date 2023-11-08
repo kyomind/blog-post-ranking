@@ -17,3 +17,11 @@ ruff = "^0.1.4"
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "UP"]
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "single"
