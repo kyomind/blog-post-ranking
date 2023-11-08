@@ -1,20 +1,19 @@
 [tool.poetry]
-name = "blog-post-ranking"
-version = "0.1.0"
-description = ""
 authors = ["kyo <odinxp@gmail.com>"]
+description = ""
 license = "MIT"
-readme = "README.md"
+name = "blog-post-ranking"
 packages = [{include = "blog_post_ranking"}]
+readme = "README.md"
+version = "0.1.0"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-
+python = "^3.10"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.1.4"
 pre-commit = "^3.5.0"
+ruff = "^0.1.4"
 
 [build-system]
-requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
