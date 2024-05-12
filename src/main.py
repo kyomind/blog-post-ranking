@@ -53,4 +53,4 @@ with open(export_path, 'w') as f:
         if rank > 10:
             break
 
-    f.write(f'\n每日更新，最近更新時間：{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}\n')
+    f.write(f'\n每日更新。最近更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`\n')
