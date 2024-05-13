@@ -1,5 +1,6 @@
 import datetime
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
@@ -7,9 +8,8 @@ from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, Run
 from google.oauth2 import service_account
 
 load_dotenv()
-KEY_DIR = os.environ['KEY_DIR']
 credentials = service_account.Credentials.from_service_account_file(
-    os.path.join(KEY_DIR, 'KEY.json')
+    os.path.join(os.environ['KEY_PATH']),
 )
 client = BetaAnalyticsDataClient(credentials=credentials)
 
@@ -25,7 +25,8 @@ request = RunReportRequest(
 )
 response = client.run_report(request)
 
-EXPORT_DIR = os.environ['EXPORT_DIR']
+BASE_DIR = Path(__file__).resolve().parent.parent
+EXPORT_DIR = os.environ.get('EXPORT_DIR') or os.path.join(BASE_DIR, 'data')
 export_path = os.path.join(EXPORT_DIR, 'index.md')
 with open(export_path, 'w') as f:
     f.write('---\n')
