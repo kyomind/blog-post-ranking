@@ -6,13 +6,16 @@ from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, RunReportRequest
 from google.oauth2 import service_account
 
-credentials = service_account.Credentials.from_service_account_file('KEY.json')
-client = BetaAnalyticsDataClient(credentials=credentials)
 load_dotenv()
+KEY_DIR = os.environ['KEY_DIR']
+credentials = service_account.Credentials.from_service_account_file(
+    os.path.join(KEY_DIR, 'KEY.json')
+)
+client = BetaAnalyticsDataClient(credentials=credentials)
 
 dimensions = [Dimension(name='pagePath'), Dimension(name='pageTitle')]
 metrics = [Metric(name='screenPageViews')]
-RESOURCE_ID = os.getenv('RESOURCE_ID') or ''
+RESOURCE_ID = os.environ['RESOURCE_ID']
 request = RunReportRequest(
     property=f'properties/{RESOURCE_ID}',
     date_ranges=[DateRange(start_date='28daysAgo', end_date='today')],
@@ -22,7 +25,7 @@ request = RunReportRequest(
 )
 response = client.run_report(request)
 
-EXPORT_DIR = os.getenv('EXPORT_DIR') or ''
+EXPORT_DIR = os.environ['EXPORT_DIR']
 export_path = os.path.join(EXPORT_DIR, 'index.md')
 with open(export_path, 'w') as f:
     f.write('---\n')
