@@ -58,3 +58,4 @@ with open(export_path, 'w') as f:
             break
 
     f.write(f'\n每日更新。最近更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`\n')
+    print('Executing done.')
