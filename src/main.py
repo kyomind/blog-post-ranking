@@ -18,8 +18,32 @@ credentials = service_account.Credentials.from_service_account_file(
 )
 client = BetaAnalyticsDataClient(credentials=credentials)
 
+ignored_paths = {
+    '/',
+    '/archives/',
+    '/top/',
+    '/about/',
+    '/tags/',
+    '/categories/',
+    '/series/',
+    '/subscribe/',
+    '/page/',
+}
+
 
 def get_page_views(client, start_date, end_date, limit):
+    """
+    Retrieves page views data from the Google Analytics API.
+
+    Args:
+        client (GoogleAnalyticsClient): The client object used to make API requests.
+        start_date (str): The start date of the date range for the report.
+        end_date (str): The end date of the date range for the report.
+        limit (int): The maximum number of results to return.
+
+    Returns:
+        GoogleAnalyticsResponse: The response object containing the page views data.
+    """
     dimensions = [Dimension(name='pagePath'), Dimension(name='pageTitle')]
     metrics = [Metric(name='screenPageViews')]
     RESOURCE_ID = os.environ['RESOURCE_ID']
@@ -34,24 +58,17 @@ def get_page_views(client, start_date, end_date, limit):
     return response
 
 
-previous_page_views = get_page_views(
-    client=client, start_date='56daysAgo', end_date='28daysAgo', limit=10
-)
-
-ignored_paths = {
-    '/',
-    '/archives/',
-    '/top/',
-    '/about/',
-    '/tags/',
-    '/categories/',
-    '/series/',
-    '/subscribe/',
-    '/page/',
-}
-
-
 def export_page_views_to_markdown(page_views, ignored_paths):
+    """
+    Export page views to a Markdown file.
+
+    Args:
+        page_views: The page views object containing the data.
+        ignored_paths: A list of paths to be ignored.
+
+    Returns:
+        None
+    """
     EXPORT_DIR = os.environ.get('EXPORT_DIR')
     export_path = os.path.join(EXPORT_DIR, 'index.md')
     with open(export_path, 'w') as f:
@@ -82,6 +99,16 @@ def export_page_views_to_markdown(page_views, ignored_paths):
 
 
 def export_page_views_to_csv(page_views, ignored_paths):
+    """
+    Export page views to a CSV file.
+
+    Args:
+        page_views: An object representing the page views.
+        ignored_paths: A list of paths to be ignored.
+
+    Returns:
+        None
+    """
     base_dir = Path(__file__).resolve().parent.parent
     export_dir = os.path.join(base_dir, 'data')
     export_path = os.path.join(export_dir, 'index.csv')
@@ -106,5 +133,8 @@ if __name__ == '__main__':
     recent_page_views = get_page_views(
         client=client, start_date='28daysAgo', end_date='today', limit=15
     )
+    # previous_page_views = get_page_views(
+    #     client=client, start_date='56daysAgo', end_date='28daysAgo', limit=10
+    # )
     export_page_views_to_markdown(recent_page_views, ignored_paths)
     logger.info('Executing done.')
