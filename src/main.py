@@ -17,17 +17,24 @@ credentials = service_account.Credentials.from_service_account_file(
 )
 client = BetaAnalyticsDataClient(credentials=credentials)
 
-dimensions = [Dimension(name='pagePath'), Dimension(name='pageTitle')]
-metrics = [Metric(name='screenPageViews')]
-RESOURCE_ID = os.environ['RESOURCE_ID']
-request = RunReportRequest(
-    property=f'properties/{RESOURCE_ID}',
-    date_ranges=[DateRange(start_date='28daysAgo', end_date='today')],
-    dimensions=dimensions,
-    metrics=metrics,
-    limit=15,
-)
-response = client.run_report(request)
+
+def get_page_views(client, start_date, end_date):
+    dimensions = [Dimension(name='pagePath'), Dimension(name='pageTitle')]
+    metrics = [Metric(name='screenPageViews')]
+    RESOURCE_ID = os.environ['RESOURCE_ID']
+    request = RunReportRequest(
+        property=f'properties/{RESOURCE_ID}',
+        date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+        dimensions=dimensions,
+        metrics=metrics,
+        limit=15,
+    )
+    response = client.run_report(request)
+    return response
+
+
+recent_page_views = get_page_views(client, '28daysAgo', 'today')
+previous_page_views = get_page_views(client, '56daysAgo', '29daysAgo')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 EXPORT_DIR = os.environ.get('EXPORT_DIR') or os.path.join(BASE_DIR, 'data')
@@ -50,8 +57,11 @@ with open(export_path, 'w') as f:
         '/about/',
         '/tags/',
         '/categories/',
+        '/series/',
+        '/subscribe/',
+        '/page/',
     }
-    for row in response.rows:
+    for row in recent_page_views.rows:
         if row.dimension_values[0].value in ignored_paths:
             continue
         f.write(
