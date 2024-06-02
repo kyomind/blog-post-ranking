@@ -78,8 +78,9 @@ def export_page_views_to_markdown(page_views, ignored_paths):
         f.write('comments: false\n')
         f.write('permalink: /top/\n')
         f.write('---\n')
-        f.write('# 本站熱門文章 TOP 10\n\n')
-        f.write('排名依據：**最近 28 天瀏覽數**\n\n')
+        f.write('# 本站熱門文章\n\n')
+        f.write('排名依據：**最近 28 天瀏覽數**\n')
+        f.write('### 瀏覽數前 10 名\n\n')
 
         rank = 1
         for row in page_views.rows:
@@ -93,8 +94,12 @@ def export_page_views_to_markdown(page_views, ignored_paths):
             if rank > 10:
                 break
 
+        f.write('\n ### 上升前 10 名\n')
+        f.write('**近期更新**\n')
+
         f.write(
-            f'\n每日更新。最近更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`\n'
+            f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`'
+            '（每日下午 3 點更新）'
         )
 
 
