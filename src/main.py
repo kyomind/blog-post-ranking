@@ -21,7 +21,7 @@ client = BetaAnalyticsDataClient(credentials=credentials)
 ignored_paths = {
     '/',
     '/archives/',
-    '/top/',
+    '/rankings/',
     '/about/',
     '/tags/',
     '/categories/',
@@ -73,12 +73,12 @@ def export_page_views_to_markdown(page_views, ignored_paths):
     export_path = os.path.join(EXPORT_DIR, 'index.md')
     with open(export_path, 'w') as f:
         f.write('---\n')
-        f.write('title: 熱門文章\n')
+        f.write('title: 本站熱門文章排名\n')
         f.write('layout: page\n')
         f.write('comments: false\n')
-        f.write('permalink: /top/\n')
+        f.write('permalink: /ranking/\n')
         f.write('---\n')
-        f.write('# 本站熱門文章\n\n')
+        f.write('# 本站熱門文章排名\n\n')
         f.write('排名依據：**最近 28 天瀏覽數**\n')
         f.write('### 瀏覽數前 10 名\n\n')
 
@@ -95,7 +95,7 @@ def export_page_views_to_markdown(page_views, ignored_paths):
                 break
 
         f.write('\n ### 上升前 10 名\n')
-        f.write('**近期更新**\n')
+        f.write('**近期更新**🐥\n')
 
         f.write(
             f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`'
