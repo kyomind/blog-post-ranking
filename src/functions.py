@@ -118,3 +118,63 @@ def _write_top_pages(page_views: list, f, limit=10) -> None:
         rank += 1
         if rank > limit:
             break
+
+
+def _views_to_dict(page_views: list[tuple]) -> dict:
+    """
+    Convert page views to a dictionary. Ignore duplicate paths.
+
+    Args:
+        page_views (list[tuple]): A list of tuples containing the formatted data.
+            example: [('/path/to/page/', 'Page Title', 100), ...]
+
+    Returns:
+        dict: A dictionary containing the page views.
+    """
+    views_dict = {}
+    for path, title, views in page_views:
+        if path not in views_dict:
+            views_dict[path] = (title, views)
+    return views_dict
+
+
+def get_top_rising_page(prev_views, recent_views, limit=10) -> list[tuple[str, str, str]]:
+    """
+    Get the top rising pages based on the percentage change in views.
+
+    Args:
+        prev_views (list[tuple]): Previous period page views.
+        recent_views (list[tuple]): Recent period page views.
+        limit (int): Number of top rising pages to output. Defaults to 10.
+
+    Returns:
+        list[tuple]: A list of tuples containing the top rising pages.
+
+    example:
+    [
+        ('/path/to/page/1/', 'Page Title 1', '50.0%'),
+        ('/path/to/page/2/', 'Page Title 2', '25.0%'),
+        ('/path/to/page/3/', 'Page Title 3', '10.0%'),
+    ]
+    """
+    prev_dict = _views_to_dict(prev_views)
+    recent_dict = _views_to_dict(recent_views)
+
+    rising_pages = []
+    for path, (recent_title, recent_views) in recent_dict.items():
+        if path in prev_dict:
+            _, prev_views = prev_dict[path]
+            percentage_change = (recent_views - prev_views) / prev_views
+            # ex: ('/path/to/page/', 'Page Title', 0.5)
+            if percentage_change > 0:  # 只取增加的
+                rising_pages.append((path, recent_title, percentage_change))
+
+    # 按百分比變化從多到少排序
+    rising_pages.sort(key=lambda x: x[2], reverse=True)
+
+    # 取前 limit 個並格式化百分比變化
+    top_rising_pages = [
+        (path, title, f'{change * 100:.1f}%') for path, title, change in rising_pages[:limit]
+    ]
+
+    return top_rising_pages
