@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.oauth2 import service_account
 
-from src.functions import _write_top_x_pages, format_page_views, get_raw_page_views
+from src.functions import _write_top_pages, format_page_views, get_raw_page_views
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ def export_page_views_to_markdown(page_views) -> None:
         f.write('排名依據：**最近 28 天瀏覽數**\n')
         f.write('### 瀏覽數前 10 名\n\n')
 
-        _write_top_x_pages(page_views=page_views, f=f, x=10)
+        _write_top_pages(page_views=page_views, f=f, limit=10)
 
 
 def append_page_views_to_markdown(recent_page_views, previous_page_views, ignored_paths):

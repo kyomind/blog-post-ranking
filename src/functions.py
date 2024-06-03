@@ -98,7 +98,7 @@ def format_page_views(page_views: Iterable) -> list[tuple]:
     ]
 
 
-def _write_top_x_pages(page_views: list, f, x=10) -> None:
+def _write_top_pages(page_views: list, f, limit=10) -> None:
     """
     Writes the top x pages to a file. Default is top 10.
 
@@ -112,5 +112,5 @@ def _write_top_x_pages(page_views: list, f, x=10) -> None:
     for path, title, _ in page_views:
         f.write(f'{rank}. [{title}]({path})\n')
         rank += 1
-        if rank > x:
+        if rank > limit:
             break
