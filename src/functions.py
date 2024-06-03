@@ -16,6 +16,7 @@ IGNORED_PATHS = (
     '/subscribe/',
     '/page/',
     '/django/',
+    '/top/',
 )
 
 
@@ -67,11 +68,13 @@ def get_raw_page_views(client, start_date, end_date, limit) -> Iterable[Row]:
     return response.rows
 
 
-def format_page_views(page_views: Iterable) -> list[tuple]:
+def filter_and_format_page_views(page_views: Iterable, threshold=50) -> list[tuple]:
     """
     Formats the page views data.
     1. Transforms the data into a list of tuples.
     2. Filters out ignored paths.
+    3. Transforms views from str to int.
+    4. Eliminates pages with views below the threshold.
 
     Args:
         page_views: An iterable containing the raw page views data.
@@ -90,11 +93,12 @@ def format_page_views(page_views: Iterable) -> list[tuple]:
         (
             row.dimension_values[0].value,
             row.dimension_values[1].value[:-14],
-            row.metric_values[0].value,
+            int(row.metric_values[0].value),
         )
         for row in page_views
         if row.dimension_values[0].value != '/'
         and not row.dimension_values[0].value.startswith(IGNORED_PATHS)
+        and int(row.metric_values[0].value) > threshold
     ]
 
 
