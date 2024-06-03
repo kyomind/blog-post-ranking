@@ -19,18 +19,6 @@ credentials = service_account.Credentials.from_service_account_file(
 )
 client = BetaAnalyticsDataClient(credentials=credentials)
 
-ignored_paths = {
-    '/',
-    '/archives/',
-    '/ranking/',
-    '/tags/',
-    '/categories/',
-    '/series/',
-    '/subscribe/',
-    '/page/',
-    '/django/',
-}
-
 
 def get_formatted_page_views(client, start_date, end_date, limit) -> list[tuple]:
     """
@@ -58,7 +46,22 @@ def get_formatted_page_views(client, start_date, end_date, limit) -> list[tuple]
     return format_page_views(page_views=raw_page_views)
 
 
-def export_page_views_to_markdown(page_views, ignored_paths):
+def eliminate_pages_below_threshold(page_views: list[tuple], threshold) -> list[tuple]:
+    """
+    Eliminate pages with views below the threshold.
+
+    Args:
+        page_views: A list of tuples containing the formatted data.
+            example: [('/path/to/page/', 'Page Title', 100), ...]
+        threshold (int): The minimum number of views required to be included.
+
+    Returns:
+        list[tuple]: A list of tuples containing the formatted data.
+    """
+    return [(path, title, views) for path, title, views in page_views if views >= threshold]
+
+
+def export_page_views_to_markdown(page_views) -> None:
     """
     Export page views to a Markdown file.
 
@@ -67,7 +70,7 @@ def export_page_views_to_markdown(page_views, ignored_paths):
             example: [('/path/to/page/', 'Page Title', 100), ...]
         ignored_paths: A list of paths to be ignored.
     """
-    EXPORT_DIR = os.environ.get('EXPORT_DIR')
+    EXPORT_DIR = os.environ['EXPORT_DIR']
     export_path = os.path.join(EXPORT_DIR, 'index.md')
     with open(export_path, 'w') as f:
         f.write('---\n')
@@ -80,7 +83,7 @@ def export_page_views_to_markdown(page_views, ignored_paths):
         f.write('排名依據：**最近 28 天瀏覽數**\n')
         f.write('### 瀏覽數前 10 名\n\n')
 
-        _write_top_x_pages(formatted_page_views=page_views, ignored_paths=ignored_paths, f=f, x=10)
+        _write_top_x_pages(page_views=page_views, f=f, x=10)
 
 
 def append_page_views_to_markdown(recent_page_views, previous_page_views, ignored_paths):
@@ -164,11 +167,20 @@ def export_page_views_to_csv(page_views, ignored_paths):
 
 if __name__ == '__main__':
     # export_page_views_to_csv(recent_page_views, ignored_paths)
+    # Write Top 10 pages to a Markdown file
     page_views = get_formatted_page_views(
         client=client, start_date='28daysAgo', end_date='today', limit=15
     )
-    # previous_page_views = get_page_views(
-    #     client=client, start_date='56daysAgo', end_date='28daysAgo', limit=10
-    # )
-    export_page_views_to_markdown(page_views=page_views, ignored_paths=ignored_paths)
+    export_page_views_to_markdown(page_views=page_views)
+
+    # Append Top 10 rising pages to a Markdown file
+    previous_page_views = get_formatted_page_views(
+        client=client, start_date='56daysAgo', end_date='28daysAgo', limit=200
+    )
+    previous_page_views_above_50 = eliminate_pages_below_threshold(
+        page_views=previous_page_views, threshold=50
+    )
+    recent_page_views = get_formatted_page_views(
+        client=client, start_date='28daysAgo', end_date='today', limit=200
+    )
     logger.info('Executing done.')

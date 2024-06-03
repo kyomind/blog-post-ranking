@@ -7,6 +7,18 @@ from collections.abc import Iterable
 
 from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, Row, RunReportRequest
 
+IGNORED_PATHS = (
+    '/',
+    '/archives/',
+    '/ranking/',
+    '/tags/',
+    '/categories/',
+    '/series/',
+    '/subscribe/',
+    '/page/',
+    '/django/',
+)
+
 
 def get_raw_page_views(client, start_date, end_date, limit) -> Iterable[Row]:
     """
@@ -58,7 +70,9 @@ def get_raw_page_views(client, start_date, end_date, limit) -> Iterable[Row]:
 
 def format_page_views(page_views: Iterable) -> list[tuple]:
     """
-    Process the page views data.
+    Formats the page views data.
+    1. Transforms the data into a list of tuples.
+    2. Filters out ignored paths.
 
     Args:
         page_views: An iterable containing the raw page views data.
@@ -80,10 +94,11 @@ def format_page_views(page_views: Iterable) -> list[tuple]:
             row.metric_values[0].value,
         )
         for row in page_views
+        if not row.dimension_values[0].value.startswith(IGNORED_PATHS)
     ]
 
 
-def _write_top_x_pages(formatted_page_views: list, ignored_paths: list, f, x=10) -> None:
+def _write_top_x_pages(page_views: list, f, x=10) -> None:
     """
     Writes the top x pages to a file. Default is top 10.
 
@@ -94,9 +109,7 @@ def _write_top_x_pages(formatted_page_views: list, ignored_paths: list, f, x=10)
         x (int, optional): The number of top pages to write. Defaults to 10.
     """
     rank = 1
-    for path, title, _ in formatted_page_views:
-        if path in ignored_paths:
-            continue
+    for path, title, _ in page_views:
         f.write(f'{rank}. [{title}]({path})\n')
         rank += 1
         if rank > x:
