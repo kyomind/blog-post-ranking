@@ -1,13 +1,17 @@
-import csv
 import datetime
 import logging
 import os
-from pathlib import Path
 
 from dotenv import load_dotenv
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
-from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, RunReportRequest
 from google.oauth2 import service_account
+
+from src.functions import (
+    _write_top_pages,
+    filter_and_format_page_views,
+    get_raw_page_views,
+    get_top_rising_page,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,22 +22,10 @@ credentials = service_account.Credentials.from_service_account_file(
 )
 client = BetaAnalyticsDataClient(credentials=credentials)
 
-ignored_paths = {
-    '/',
-    '/archives/',
-    '/top/',
-    '/about/',
-    '/tags/',
-    '/categories/',
-    '/series/',
-    '/subscribe/',
-    '/page/',
-}
 
-
-def get_page_views(client, start_date, end_date, limit):
+def get_processed_page_views(client, start_date, end_date, limit) -> list[tuple]:
     """
-    Retrieves page views data from the Google Analytics API.
+    Get the processed page views data.
 
     Args:
         client (GoogleAnalyticsClient): The client object used to make API requests.
@@ -42,59 +34,64 @@ def get_page_views(client, start_date, end_date, limit):
         limit (int): The maximum number of results to return.
 
     Returns:
-        GoogleAnalyticsResponse: The response object containing the page views data.
+        list[tuple]: A list of tuples containing the processed data.
+
+    example:
+    [
+        ('/path/to/page/1/', 'Page Title 1', 300),
+        ('/path/to/page/2/', 'Page Title 2', 200),
+        ('/path/to/page/3/', 'Page Title 3', 100),
+    ]
     """
-    dimensions = [Dimension(name='pagePath'), Dimension(name='pageTitle')]
-    metrics = [Metric(name='screenPageViews')]
-    RESOURCE_ID = os.environ['RESOURCE_ID']
-    request = RunReportRequest(
-        property=f'properties/{RESOURCE_ID}',
-        date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-        dimensions=dimensions,
-        metrics=metrics,
-        limit=limit,
+    raw_page_views = get_raw_page_views(
+        client=client, start_date=start_date, end_date=end_date, limit=limit
     )
-    response = client.run_report(request)
-    return response
+    return filter_and_format_page_views(page_views=raw_page_views)
 
 
-def export_page_views_to_markdown(page_views, ignored_paths):
+def export_page_views_to_markdown(page_views) -> None:
     """
     Export page views to a Markdown file.
 
     Args:
-        page_views: The page views object containing the data.
+        formatted_page_views: A list of tuples containing the formatted data.
+            example: [('/path/to/page/', 'Page Title', 100), ...]
         ignored_paths: A list of paths to be ignored.
-
-    Returns:
-        None
     """
-    EXPORT_DIR = os.environ.get('EXPORT_DIR')
+    EXPORT_DIR = os.environ['EXPORT_DIR']
     export_path = os.path.join(EXPORT_DIR, 'index.md')
     with open(export_path, 'w') as f:
         f.write('---\n')
-        f.write('title: 熱門文章\n')
+        f.write('title: 本站熱門文章排名\n')
         f.write('layout: page\n')
         f.write('comments: false\n')
-        f.write('permalink: /top/\n')
+        f.write('permalink: /ranking/\n')
         f.write('---\n')
-        f.write('# 本站熱門文章 TOP 10\n\n')
-        f.write('排名依據：**最近 28 天瀏覽數**\n\n')
+        f.write('# 本站熱門文章排名\n\n')
+        f.write('排名依據：**最近 28 天瀏覽數**\n')
+        f.write('### 瀏覽前 10 名\n\n')
 
-        rank = 1
-        for row in page_views.rows:
-            if row.dimension_values[0].value in ignored_paths:
-                continue
-            f.write(
-                f'{rank}. [{row.dimension_values[1].value[:-14]}]'
-                f'({row.dimension_values[0].value})\n'
-            )
-            rank += 1
-            if rank > 10:
-                break
+        _write_top_pages(page_views=page_views, f=f, limit=10)
+
+
+def append_page_views_to_markdown(top_rising_pages) -> None:
+    """
+    Append top rising pages to a Markdown file.
+
+    Args:
+        top_rising_pages: A list of tuples containing the top rising pages.
+            example: [('/path/to/page/', 'Page Title', '50.0%'), ...]
+    """
+    EXPORT_DIR = os.environ['EXPORT_DIR']
+    export_path = os.path.join(EXPORT_DIR, 'index.md')
+    with open(export_path, 'a') as f:
+        f.write('\n### 上升前 10 名\n\n')
+        for rank, (path, title, change) in enumerate(top_rising_pages, start=1):
+            f.write(f'{rank}. [{title}]({path})（{change}）\n')
 
         f.write(
-            f'\n每日更新。最近更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`\n'
+            f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`'
+            '（每日下午 3 點更新）\n'
         )
 
 
@@ -109,32 +106,24 @@ def export_page_views_to_csv(page_views, ignored_paths):
     Returns:
         None
     """
-    base_dir = Path(__file__).resolve().parent.parent
-    export_dir = os.path.join(base_dir, 'data')
-    export_path = os.path.join(export_dir, 'index.csv')
-    with open(export_path, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['rank', 'path', 'views', 'date'])
-
-        rank = 1
-        for row in page_views.rows:
-            if row.dimension_values[0].value in ignored_paths:
-                continue
-            writer.writerow(
-                [rank, row.dimension_values[1].value[:-14], row.dimension_values[0].value]
-            )
-            rank += 1
-            if rank > 10:
-                break
 
 
 if __name__ == '__main__':
-    # export_page_views_to_csv(recent_page_views, ignored_paths)
-    recent_page_views = get_page_views(
+    # Write Top 10 pages to a Markdown file
+    page_views = get_processed_page_views(
         client=client, start_date='28daysAgo', end_date='today', limit=15
     )
-    # previous_page_views = get_page_views(
-    #     client=client, start_date='56daysAgo', end_date='28daysAgo', limit=10
-    # )
-    export_page_views_to_markdown(recent_page_views, ignored_paths)
+    export_page_views_to_markdown(page_views=page_views)
+
+    # Append Top 10 rising pages to a Markdown file
+    previous_page_views = get_processed_page_views(
+        client=client, start_date='56daysAgo', end_date='28daysAgo', limit=100
+    )
+    recent_page_views = get_processed_page_views(
+        client=client, start_date='28daysAgo', end_date='today', limit=100
+    )
+    top_10_rising_pages = get_top_rising_page(
+        prev_views=previous_page_views, recent_views=recent_page_views
+    )
+    append_page_views_to_markdown(top_rising_pages=top_10_rising_pages)
     logger.info('Executing done.')
