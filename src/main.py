@@ -46,14 +46,14 @@ def get_formatted_page_views(client, start_date, end_date, limit) -> list[tuple]
     return format_page_views(page_views=raw_page_views)
 
 
-def eliminate_pages_below_threshold(page_views: list[tuple], threshold) -> list[tuple]:
+def eliminate_pages_below_threshold(page_views: list[tuple], threshold=50) -> list[tuple]:
     """
     Eliminate pages with views below the threshold.
 
     Args:
         page_views: A list of tuples containing the formatted data.
             example: [('/path/to/page/', 'Page Title', 100), ...]
-        threshold (int): The minimum number of views required to be included.
+        threshold (int): The minimum number of views required to be included. Defaults to 50.
 
     Returns:
         list[tuple]: A list of tuples containing the formatted data.
@@ -86,48 +86,62 @@ def export_page_views_to_markdown(page_views) -> None:
         _write_top_pages(page_views=page_views, f=f, limit=10)
 
 
-def append_page_views_to_markdown(recent_page_views, previous_page_views, ignored_paths):
+def get_top_rising_page(prev_views, recent_views, limit=10) -> list[tuple[str, str, str]]:
     """
-    Append page views to an existing Markdown file.
+    Get the top rising pages based on the percentage change in views.
 
     Args:
-        recent_page_views: An object representing the recent page views.
-        previous_page_views: An object representing the previous page views.
-        ignored_paths: A list of paths to be ignored.
+        prev_views (list[tuple]): Previous period page views.
+        recent_views (list[tuple]): Recent period page views.
+        limit (int): Number of top rising pages to output. Defaults to 10.
 
     Returns:
-        None
+        list[tuple]: A list of tuples containing the top rising pages.
+
+    example:
+    [
+        ('/path/to/page/1/', 'Page Title 1', '50.0%'),
+        ('/path/to/page/2/', 'Page Title 2', '25.0%'),
+        ('/path/to/page/3/', 'Page Title 3', '10.0%'),
+    ]
     """
-    EXPORT_DIR = os.environ.get('EXPORT_DIR')
+    prev_dict = {path: (title, views) for path, title, views in prev_views}
+    recent_dict = {path: (title, views) for path, title, views in recent_views}
+
+    rising_pages = []
+
+    for path, (recent_title, recent_views) in recent_dict.items():
+        if path in prev_dict:
+            _, prev_views = prev_dict[path]
+            percentage_change = (recent_views - prev_views) / prev_views
+            # ex: ('/path/to/page/', 'Page Title', 0.5)
+            rising_pages.append((path, recent_title, percentage_change))
+
+    # 按百分比變化從多到少排序
+    rising_pages.sort(key=lambda x: x[2], reverse=True)
+
+    # 取前 limit 個並格式化百分比變化
+    top_rising_pages = [
+        (path, title, f'{change * 100:.1f}%') for path, title, change in rising_pages[:limit]
+    ]
+
+    return top_rising_pages
+
+
+def append_page_views_to_markdown(top_rising_pages) -> None:
+    """
+    Append top rising pages to a Markdown file.
+
+    Args:
+        top_rising_pages: A list of tuples containing the top rising pages.
+            example: [('/path/to/page/', 'Page Title', '50.0%'), ...]
+    """
+    EXPORT_DIR = os.environ['EXPORT_DIR']
     export_path = os.path.join(EXPORT_DIR, 'index.md')
     with open(export_path, 'a') as f:
-        f.write('\n\n### 上升前 10 名\n')
-        f.write('**近期更新**🐥\n')
-
-        rank = 1
-        for row in recent_page_views.rows:
-            if row.dimension_values[0].value in ignored_paths:
-                continue
-            f.write(
-                f'{rank}. [{row.dimension_values[1].value[:-14]}]'
-                f'({row.dimension_values[0].value})\n'
-            )
-            rank += 1
-            if rank > 10:
-                break
-
-        f.write('\n**前期更新**🐣\n')
-        rank = 1
-        for row in previous_page_views.rows:
-            if row.dimension_values[0].value in ignored_paths:
-                continue
-            f.write(
-                f'{rank}. [{row.dimension_values[1].value[:-14]}]'
-                f'({row.dimension_values[0].value})\n'
-            )
-            rank += 1
-            if rank > 10:
-                break
+        f.write('\n### 上升前 10 名\n\n')
+        for rank, (path, title, change) in enumerate(top_rising_pages, start=1):
+            f.write(f'{rank}. [{title}]({path}) ({change})\n')
 
         f.write(
             f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`'
@@ -171,16 +185,20 @@ if __name__ == '__main__':
     page_views = get_formatted_page_views(
         client=client, start_date='28daysAgo', end_date='today', limit=15
     )
+    print(page_views)
     export_page_views_to_markdown(page_views=page_views)
 
     # Append Top 10 rising pages to a Markdown file
     previous_page_views = get_formatted_page_views(
         client=client, start_date='56daysAgo', end_date='28daysAgo', limit=200
     )
-    previous_page_views_above_50 = eliminate_pages_below_threshold(
-        page_views=previous_page_views, threshold=50
-    )
+    previous_page_views_above_50 = eliminate_pages_below_threshold(page_views=previous_page_views)
     recent_page_views = get_formatted_page_views(
         client=client, start_date='28daysAgo', end_date='today', limit=200
     )
+    top_10_rising_pages = get_top_rising_page(
+        prev_views=previous_page_views_above_50, recent_views=recent_page_views
+    )
+    print(top_10_rising_pages)
+    append_page_views_to_markdown(top_rising_pages=top_10_rising_pages)
     logger.info('Executing done.')

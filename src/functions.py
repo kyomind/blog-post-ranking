@@ -8,7 +8,6 @@ from collections.abc import Iterable
 from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, Row, RunReportRequest
 
 IGNORED_PATHS = (
-    '/',
     '/archives/',
     '/ranking/',
     '/tags/',
@@ -94,7 +93,8 @@ def format_page_views(page_views: Iterable) -> list[tuple]:
             row.metric_values[0].value,
         )
         for row in page_views
-        if not row.dimension_values[0].value.startswith(IGNORED_PATHS)
+        if row.dimension_values[0].value != '/'
+        and not row.dimension_values[0].value.startswith(IGNORED_PATHS)
     ]
 
 
