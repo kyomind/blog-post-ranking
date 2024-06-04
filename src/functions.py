@@ -104,13 +104,13 @@ def filter_and_format_page_views(page_views: Iterable, threshold=50) -> list[tup
 
 def _write_top_pages(page_views: list, f, limit=10) -> None:
     """
-    Writes the top x pages to a file. Default is top 10.
+    Write the top pages to a Markdown file.
 
     Args:
         formatted_page_views (list): A list of tuples containing page information.
         ignored_paths (list): A list of paths to be ignored.
         f (file): The file object to write the top pages to.
-        x (int, optional): The number of top pages to write. Defaults to 10.
+        limit (int): The number of top pages to write. Defaults to 10.
     """
     rank = 1
     for path, title, _ in page_views:
@@ -138,9 +138,9 @@ def _views_to_dict(page_views: list[tuple]) -> dict:
     return views_dict
 
 
-def get_top_rising_page(prev_views, recent_views, limit=10) -> list[tuple[str, str, str]]:
+def find_top_trending_pages(prev_views, recent_views, limit=10) -> list[tuple[str, str, str]]:
     """
-    Get the top rising pages based on the percentage change in views.
+    Find the top rising pages based on the percentage change in views.
 
     Args:
         prev_views (list[tuple]): Previous period page views.

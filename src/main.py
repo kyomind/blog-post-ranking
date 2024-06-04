@@ -9,8 +9,8 @@ from google.oauth2 import service_account
 from src.functions import (
     _write_top_pages,
     filter_and_format_page_views,
+    find_top_trending_pages,
     get_raw_page_views,
-    get_top_rising_page,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -110,20 +110,17 @@ def export_page_views_to_csv(page_views, ignored_paths):
 
 if __name__ == '__main__':
     # Write Top 10 pages to a Markdown file
-    page_views = get_processed_page_views(
-        client=client, start_date='28daysAgo', end_date='today', limit=15
-    )
-    export_page_views_to_markdown(page_views=page_views)
-
-    # Append Top 10 rising pages to a Markdown file
-    previous_page_views = get_processed_page_views(
-        client=client, start_date='56daysAgo', end_date='28daysAgo', limit=100
-    )
     recent_page_views = get_processed_page_views(
         client=client, start_date='28daysAgo', end_date='today', limit=100
     )
-    top_10_rising_pages = get_top_rising_page(
+    export_page_views_to_markdown(page_views=recent_page_views)
+
+    # Append Top 10 trending pages to the Markdown file
+    previous_page_views = get_processed_page_views(
+        client=client, start_date='56daysAgo', end_date='28daysAgo', limit=100
+    )
+    top_10_trending_pages = find_top_trending_pages(
         prev_views=previous_page_views, recent_views=recent_page_views
     )
-    append_page_views_to_markdown(top_rising_pages=top_10_rising_pages)
+    append_page_views_to_markdown(top_rising_pages=top_10_trending_pages)
     logger.info('Executing done.')
