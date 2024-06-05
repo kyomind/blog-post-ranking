@@ -13,7 +13,8 @@ from src.functions import (
     get_raw_page_views,
 )
 
-logging.basicConfig(level=logging.INFO)
+LOGGER_FORMAT = '%(asctime)s [%(levelname)s] %(filename)s %(lineno)d - %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOGGER_FORMAT)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
