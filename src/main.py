@@ -1,6 +1,9 @@
+import csv
 import datetime
 import logging
 import os
+import pathlib
+from collections import deque
 
 from dotenv import load_dotenv
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
@@ -16,6 +19,7 @@ from src.functions import (
 LOGGER_FORMAT = '%(asctime)s [%(levelname)s] %(filename)s %(lineno)d - %(message)s'
 logging.basicConfig(level=logging.INFO, format=LOGGER_FORMAT)
 logger = logging.getLogger(__name__)
+BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 
 load_dotenv()
 credentials = service_account.Credentials.from_service_account_file(
@@ -50,14 +54,13 @@ def get_processed_page_views(client, start_date, end_date, limit) -> list[tuple]
     return filter_and_format_page_views(page_views=raw_page_views)
 
 
-def export_page_views_to_markdown(page_views) -> None:
+def export_accumulative_ranking_to_markdown(page_views) -> None:
     """
     Export page views to a Markdown file.
 
     Args:
-        formatted_page_views: A list of tuples containing the formatted data.
+        page_views: A list of tuples containing the page views.
             example: [('/path/to/page/', 'Page Title', 100), ...]
-        ignored_paths: A list of paths to be ignored.
     """
     EXPORT_DIR = os.environ['EXPORT_DIR']
     export_path = os.path.join(EXPORT_DIR, 'index.md')
@@ -72,10 +75,25 @@ def export_page_views_to_markdown(page_views) -> None:
         f.write('排名依據：**最近 28 天瀏覽數**\n')
         f.write('### 瀏覽前 10 名\n\n')
 
+        # find yesterday's data
+        # row: /path/to/page/,Page Title,100,1,2024-01-01
+        paths_with_rank = []  # target element: (path, rank)
+        csv_import_path = os.path.join(BASE_DIR, 'data', 'accumulative.csv')
+        with open(csv_import_path, newline='') as f_csv:
+            reader = csv.reader(f_csv)
+            last_10_rows = deque(reader, 10)  # 讀取檔案的最後 10 行
+            for row in last_10_rows:
+                path, *_, rank, _ = row
+                try:
+                    paths_with_rank.append((path, int(rank)))
+                except ValueError:
+                    continue
+        print(paths_with_rank)
+
         _write_top_pages(page_views=page_views, f=f, limit=10)
 
 
-def append_page_views_to_markdown(top_rising_pages) -> None:
+def append_trending_ranking_to_markdown(top_rising_pages) -> None:
     """
     Append top rising pages to a Markdown file.
 
@@ -96,17 +114,33 @@ def append_page_views_to_markdown(top_rising_pages) -> None:
         )
 
 
-def export_page_views_to_csv(page_views, ignored_paths):
+def export_accumulative_ranking_to_csv(page_views) -> None:
     """
-    Export page views to a CSV file.
+    Export accumulated page views to a CSV file.
+
+    Only export top 10 pages
 
     Args:
-        page_views: An object representing the page views.
-        ignored_paths: A list of paths to be ignored.
-
-    Returns:
-        None
+        page_views: A list of tuples containing the page views.
+            example: [('/path/to/page/', 'Page Title', 100), ...]
     """
+    # ex: 2024-01-01
+    date = datetime.datetime.today().strftime('%Y-%m-%d')
+    csv_path = os.path.join(BASE_DIR, 'data', 'accumulative.csv')
+    # 先確認最後一行的資料是不是今天的，如果是就不用寫入
+    with open(csv_path) as f:
+        last_line = deque(f, 1)
+        if last_line:
+            last_date = last_line[0].split(',')[-1].strip()
+            if last_date == date:
+                logger.info('Data already exists.')
+                return
+
+    with open(csv_path, 'a') as f:
+        for rank, (path, title, views) in enumerate(page_views, start=1):
+            f.write(f'{path},{title},{views},{rank},{date}\n')
+            if rank == 10:
+                break
 
 
 if __name__ == '__main__':
@@ -114,7 +148,8 @@ if __name__ == '__main__':
     recent_page_views = get_processed_page_views(
         client=client, start_date='28daysAgo', end_date='today', limit=100
     )
-    export_page_views_to_markdown(page_views=recent_page_views)
+    export_accumulative_ranking_to_markdown(page_views=recent_page_views)
+    export_accumulative_ranking_to_csv(page_views=recent_page_views)
 
     # Append Top 10 trending pages to the Markdown file
     previous_page_views = get_processed_page_views(
@@ -123,5 +158,5 @@ if __name__ == '__main__':
     top_10_trending_pages = find_top_trending_pages(
         prev_views=previous_page_views, recent_views=recent_page_views
     )
-    append_page_views_to_markdown(top_rising_pages=top_10_trending_pages)
+    append_trending_ranking_to_markdown(top_rising_pages=top_10_trending_pages)
     logger.info('Executing done.')
