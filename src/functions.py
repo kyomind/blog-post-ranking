@@ -102,21 +102,33 @@ def filter_and_format_page_views(page_views: Iterable, threshold=50) -> list[tup
     ]
 
 
-def _write_top_pages(page_views: list, f, limit=10) -> None:
+def _write_top_pages(
+    page_views: list,
+    f,
+    path_ranks: dict[str, int],
+    limit=10,
+) -> None:
     """
     Write the top pages to a Markdown file.
 
     Args:
-        formatted_page_views (list): A list of tuples containing page information.
-        ignored_paths (list): A list of paths to be ignored.
+        page_views (list): A list of tuples containing page information.
         f (file): The file object to write the top pages to.
         limit (int): The number of top pages to write. Defaults to 10.
+        paths_with_rank (list): A list of tuples containing the path and rank.
     """
-    rank = 1
-    for path, title, _ in page_views:
-        f.write(f'{rank}. [{title}]({path})\n')
-        rank += 1
-        if rank > limit:
+    for rank, (path, title, _) in enumerate(page_views, start=1):
+        if path in path_ranks:
+            yesterday_rank = path_ranks[path]
+            if yesterday_rank > rank:  # 排名上升
+                f.write(f'{rank}. [{title}]({path}) +{yesterday_rank - rank}\n')
+            elif yesterday_rank == rank:  # 排名不變
+                f.write(f'{rank}. [{title}]({path})\n')
+            else:  # 排名下降
+                f.write(f'{rank}. [{title}]({path}) ↓\n')
+        else:
+            f.write(f'{rank}. [{title}]({path}) new!\n')
+        if rank == limit:
             break
 
 
