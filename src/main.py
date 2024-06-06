@@ -129,12 +129,12 @@ def export_accumulative_ranking_to_csv(page_views) -> None:
     csv_path = os.path.join(BASE_DIR, 'data', 'accumulative.csv')
     # 先確認最後一行的資料是不是今天的，如果是就不用寫入
     with open(csv_path) as f:
-        last_line = deque(f, 1)
-        if last_line:
-            last_date = last_line[0].split(',')[-1].strip()
-            if last_date == date:
-                logger.info('Data already exists.')
-                return
+        (last_line,) = deque(f, 1)
+        *_, last_field = last_line.split(',')
+        last_date = last_field.strip()
+        if last_date == date:
+            logger.info('Data already exists.')
+            return
 
     with open(csv_path, 'a') as f:
         for rank, (path, title, views) in enumerate(page_views, start=1):
