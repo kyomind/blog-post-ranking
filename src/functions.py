@@ -3,6 +3,7 @@ helper functions
 """
 
 import os
+import pathlib
 from collections.abc import Iterable
 
 from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, Row, RunReportRequest
@@ -18,6 +19,8 @@ IGNORED_PATHS = (
     '/django/',
     '/top/',
 )
+
+BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 
 
 def get_raw_page_views(client, start_date, end_date, limit) -> Iterable[Row]:
@@ -142,12 +145,35 @@ def _views_to_dict(page_views: list[tuple]) -> dict:
 
     Returns:
         dict: A dictionary containing the page views.
+
+    example:
+    {
+        '/path/to/page/1/': ('Page Title 1', 100),
+        '/path/to/page/2/': ('Page Title 2', 200),
+        '/path/to/page/3/': ('Page Title 3', 300),
+    }
     """
     views_dict = {}
     for path, title, views in page_views:
         if path not in views_dict:
             views_dict[path] = (title, views)
     return views_dict
+
+
+def _write_views_to_csv(views_dict: dict, file_name='views') -> None:
+    """
+    Write the page views to a Markdown file.
+
+    Args:
+        views_dict (dict): A dictionary containing the page views.
+            example: {'/path/to/page/': ('Page Title', 100), ...}
+    """
+
+    write_path = os.path.join(BASE_DIR, 'data', f'{file_name}.csv')
+    with open(write_path, 'w') as f:
+        f.write('title, views\n')
+        for title, views in views_dict.values():
+            f.write(f'{title}, {views}\n')
 
 
 def find_top_trending_pages(prev_views, recent_views, limit=10) -> list[tuple[str, str, str]]:
@@ -170,6 +196,7 @@ def find_top_trending_pages(prev_views, recent_views, limit=10) -> list[tuple[st
     ]
     """
     prev_dict = _views_to_dict(prev_views)
+    _write_views_to_csv(prev_dict, file_name='prev_views')
     recent_dict = _views_to_dict(recent_views)
 
     rising_pages = []

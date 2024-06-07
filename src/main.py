@@ -79,7 +79,7 @@ def export_accumulative_ranking_to_markdown(page_views) -> None:
         csv_import_path = os.path.join(BASE_DIR, 'data', 'accumulative.csv')
         with open(csv_import_path, newline='') as f_csv:
             reader = csv.reader(f_csv)
-            last_20_rows = deque(reader, 20)  # 讀取檔案的最後 10 行
+            last_20_rows = deque(reader, 20)  # 讀取檔案的最後 20 行
             for row in last_20_rows:
                 path, *_, rank, date = row
                 yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
