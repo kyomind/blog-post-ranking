@@ -83,7 +83,7 @@ def filter_and_format_page_views(page_views: Iterable, threshold=50) -> list[tup
         page_views: An iterable containing the raw page views data.
 
     Returns:
-        tuple: A tuple containing the formatted data.
+        list[tuple]: A list of tuples containing the formatted data.
 
     example:
     [
@@ -118,7 +118,7 @@ def _write_top_pages(
         page_views (list): A list of tuples containing page information.
         f (file): The file object to write the top pages to.
         limit (int): The number of top pages to write. Defaults to 10.
-        paths_with_rank (list): A list of tuples containing the path and rank.
+        path_ranks (dict): A dictionary containing the path and its rank.
     """
     for rank, (path, title, _) in enumerate(page_views, start=1):
         if path in path_ranks:
