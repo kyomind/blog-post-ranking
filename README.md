@@ -9,7 +9,7 @@
 - [使用方法](#使用方法)
 - [環境變數](#環境變數)
 - [程式碼結構](#程式碼結構)
-- [參考資料](#參考資料)
+- [參考](#參考)
 
 ## 專案簡介
 本專案的目的是從 Google Analytics 4 取得最近 28 天的 blog 瀏覽數據，並將這些數據匯出為 Markdown 文件，方便用於 Hexo 部落格的展示。
@@ -70,5 +70,7 @@ EXPORT_DIR=path/to/export/directory
 - `append_trending_ranking_to_markdown(top_rising_pages)`：附加上升趨勢頁面數據到 Markdown 文件。
 - `export_accumulative_ranking_to_csv(page_views)`：將頁面瀏覽數據匯出為 CSV 文件。
 
-## 參考資料
+## 參考
 - [如何使用 Google Analytics Data API](https://codingman.cc/how-to-use-google-analytics-data-api/)
+- [31，打造新版「熱門文章排名」](https://blog.kyomind.tw/weekly-review-31/)
+
