@@ -72,7 +72,7 @@ def export_accumulative_ranking_to_markdown(page_views) -> None:
         f.write('permalink: /ranking/\n')
         f.write('---\n')
         f.write('# 本站熱門文章排名\n\n')
-        f.write('排名依據：最近 **14 天**瀏覽數（至少 25 次瀏覽）\n')
+        f.write('排名依據：**最近 14 天瀏覽數**（至少 25 次瀏覽）\n')
         f.write('### 瀏覽前 10 名\n\n')
 
         path_ranks = {}  # ex: {'/path/to/page/': 1, ...}
@@ -112,7 +112,7 @@ def append_trending_ranking_to_markdown(top_rising_pages) -> None:
             f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`'
             '（每日下午 3 點更新）\n'
         )
-        f.write('實作原始碼：[blog-post-ranking](https://github.com/kyomind/blog-post-ranking)')
+        f.write('Source code：[blog-post-ranking](https://github.com/kyomind/blog-post-ranking)')
 
 
 def export_accumulative_ranking_to_csv(page_views) -> None:
