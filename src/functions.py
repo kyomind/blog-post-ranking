@@ -105,7 +105,7 @@ def filter_and_format_page_views(page_views: Iterable, threshold=50) -> list[tup
     ]
 
 
-def _write_top_pages(
+def _write_top_page_entries(
     page_views: list,
     f,
     path_ranks: dict[str, int],
@@ -120,17 +120,17 @@ def _write_top_pages(
         limit (int): The number of top pages to write. Defaults to 10.
         path_ranks (dict): A dictionary containing the path and its rank.
     """
-    for rank, (path, title, _) in enumerate(page_views, start=1):
+    for rank, (path, title, view_count) in enumerate(page_views, start=1):
         if path in path_ranks:
             yesterday_rank = path_ranks[path]
             if yesterday_rank > rank:  # 排名上升
-                f.write(f'{rank}. [{title}]({path}) +{yesterday_rank - rank}\n')
+                f.write(f'{rank}. [{title}]({path}) +{yesterday_rank - rank}（{view_count}）\n')
             elif yesterday_rank == rank:  # 排名不變
-                f.write(f'{rank}. [{title}]({path})\n')
+                f.write(f'{rank}. [{title}]({path})（{view_count}）\n')
             else:  # 排名下降
-                f.write(f'{rank}. [{title}]({path}) ↓\n')
+                f.write(f'{rank}. [{title}]({path}) ↓（{view_count}）\n')
         else:
-            f.write(f'{rank}. [{title}]({path}) new!\n')
+            f.write(f'{rank}. [{title}]({path}) new!（{view_count}）\n')
         if rank == limit:
             break
 

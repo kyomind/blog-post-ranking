@@ -10,7 +10,7 @@ from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.oauth2 import service_account
 
 from src.functions import (
-    _write_top_pages,
+    _write_top_page_entries,
     filter_and_format_page_views,
     find_top_trending_pages,
     get_raw_page_views,
@@ -72,7 +72,7 @@ def export_accumulative_ranking_to_markdown(page_views) -> None:
         f.write('permalink: /ranking/\n')
         f.write('---\n')
         f.write('# 本站熱門文章排名\n\n')
-        f.write('排名依據：**最近 14 天瀏覽數**（至少 25 次瀏覽）\n')
+        f.write('排名依據：**最近 14 天瀏覽數**\n')
         f.write('### 瀏覽前 10 名\n\n')
 
         path_ranks = {}  # ex: {'/path/to/page/': 1, ...}
@@ -90,7 +90,7 @@ def export_accumulative_ranking_to_markdown(page_views) -> None:
                     except ValueError:
                         continue
 
-        _write_top_pages(page_views=page_views, f=f, path_ranks=path_ranks, limit=10)
+        _write_top_page_entries(page_views=page_views, f=f, path_ranks=path_ranks, limit=10)
 
 
 def append_trending_ranking_to_markdown(top_rising_pages) -> None:
