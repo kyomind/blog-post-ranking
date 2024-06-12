@@ -30,7 +30,7 @@
 2. 建立並啟動虛擬環境：（我使用 Python 3.11.6）
     ```sh
     python -m venv venv
-    source venv/bin/activate  # 對於 Windows 使用者，請使用 `venv\Scripts\activate`
+    source venv/bin/activate  # Windows 使用者，請使用 `venv\Scripts\activate`
     ```
 
 3. 安裝所需的套件：
@@ -49,7 +49,7 @@
  ```sh
  python src/main.py
  ```
-程式將會從 GA4 取得最近 28 天的頁面瀏覽數據，並將其匯出為 Markdown 文件。
+程式將會從 GA4 取得最近 28 天的頁面瀏覽數據，並匯出為 Markdown。
 
 ## 環境變數
 在專案根目錄下建立一個 `.env` 文件，並設定以下環境變數：
@@ -64,7 +64,7 @@ EXPORT_DIR=path/to/export/directory
 - EXPORT_DIR：匯出 Markdown 文件的目錄路徑。沒設定的話，會匯出到專案根目錄下的 `data` 目錄。
 
 ## 程式碼結構
-- `src/main.py`：主程式文件，包含從 GA4 取得數據並匯出的邏輯。
+- `src/main.py`：主程式，從 GA4 取得數據並匯出。
 - `get_processed_page_views`：函式，取得並處理頁面瀏覽數據。
 - `export_accumulative_ranking_to_markdown`：函式，將頁面瀏覽數據匯出為 Markdown 文件。
 - `append_trending_ranking_to_markdown`：函式，附加上升趨勢頁面數據到 Markdown 文件。
