@@ -70,6 +70,7 @@ def export_accumulative_ranking_to_markdown(page_views) -> None:
         f.write('layout: page\n')
         f.write('comments: false\n')
         f.write('permalink: /ranking/\n')
+        f.write('caption: 本站熱門文章排名，依據最近 14 天瀏覽數排序，每日下午 3 點更新。\n')
         f.write('---\n')
         f.write('# 本站熱門文章排名\n\n')
         f.write('排名依據：**最近 14 天瀏覽數**\n')
