@@ -51,7 +51,7 @@ def get_processed_page_views(client, start_date, end_date, limit) -> list[tuple]
     raw_page_views = get_raw_page_views(
         client=client, start_date=start_date, end_date=end_date, limit=limit
     )
-    return filter_and_format_page_views(page_views=raw_page_views, threshold=25)
+    return filter_and_format_page_views(page_views=raw_page_views, threshold=20)
 
 
 def export_accumulative_ranking_to_markdown(page_views) -> None:
