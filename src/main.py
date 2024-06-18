@@ -148,14 +148,14 @@ def export_accumulative_ranking_to_csv(page_views) -> None:
 if __name__ == '__main__':
     # Write Top 10 pages to a Markdown file
     recent_page_views = get_processed_page_views(
-        client=client, start_date='14daysAgo', end_date='today', limit=100
+        client=client, start_date='15daysAgo', end_date='1daysAgo', limit=100
     )
     export_accumulative_ranking_to_markdown(page_views=recent_page_views)
     export_accumulative_ranking_to_csv(page_views=recent_page_views)
 
     # Append Top 10 trending pages to the Markdown file
     previous_page_views = get_processed_page_views(
-        client=client, start_date='28daysAgo', end_date='14daysAgo', limit=100
+        client=client, start_date='29daysAgo', end_date='15daysAgo', limit=100
     )
     top_10_trending_pages = find_top_trending_pages(
         prev_views=previous_page_views, recent_views=recent_page_views
