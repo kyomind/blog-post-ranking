@@ -1,4 +1,4 @@
-# blog-post-ranking
+# Blog Post Ranking
 
 從 Google Analytics 4 (GA4) API 取得最近 14 天（或指定天數）blog 瀏覽數 Top 10（或指定 Top N）並匯出為 Markdown 文件（for Hexo rendering）。專案背景介紹可參考〈[31，打造新版「熱門文章排名」](https://blog.kyomind.tw/weekly-review-31/)
 〉。
