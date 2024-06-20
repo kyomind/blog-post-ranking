@@ -160,20 +160,26 @@ def _views_to_dict(page_views: list[tuple]) -> dict:
     return views_dict
 
 
-def _write_views_to_csv(views_dict: dict, file_name='views') -> None:
+def _write_views_to_csv(prev_views: dict, recent_views: dict, file_name: str = 'views') -> None:
     """
     Write the page views to a Markdown file.
 
     Args:
-        views_dict (dict): A dictionary containing the page views.
+        prev_views (dict): A dictionary containing the previous period page views.
             example: {'/path/to/page/': ('Page Title', 100), ...}
+        recent_views (dict): A dictionary containing the recent period page views.
+            example: {'/path/to/page/': ('Page Title', 200), ...}
     """
-
     write_path = os.path.join(BASE_DIR, 'data', f'{file_name}.csv')
     with open(write_path, 'w') as f:
-        f.write('title, views\n')
-        for title, views in views_dict.values():
-            f.write(f'{title}, {views}\n')
+        f.write('title, prev_views, recent_views, change, percent_change\n')
+        for path, (title, views) in prev_views.items():
+            if path in recent_views:
+                f.write(f'{title}, {views}, {recent_views[path][1]}, ')
+                f.write(f'{recent_views[path][1] - views}, ')
+                f.write(f'{((recent_views[path][1] - views)/views)*100:.2f}%\n')
+            else:
+                f.write(f'{title}, {views}\n')
 
 
 def find_top_trending_pages(prev_views, recent_views, limit=10) -> list[tuple[str, str, str]]:
@@ -196,8 +202,10 @@ def find_top_trending_pages(prev_views, recent_views, limit=10) -> list[tuple[st
     ]
     """
     prev_dict = _views_to_dict(prev_views)
-    _write_views_to_csv(prev_dict, file_name='prev_views')
     recent_dict = _views_to_dict(recent_views)
+    _write_views_to_csv(  # 歷史數據，供內部參考
+        prev_views=prev_dict, recent_views=recent_dict, file_name='prev_and_recent'
+    )
 
     rising_pages = []
     for path, (recent_title, recent_views) in recent_dict.items():
