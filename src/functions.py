@@ -130,7 +130,7 @@ def _write_top_page_entries(
             else:  # 排名下降
                 f.write(f'{rank}. [{title}]({path}) ↓（{view_count}）\n')
         else:
-            f.write(f'{rank}. [{title}]({path}) new❗️（{view_count}）\n')
+            f.write(f'{rank}. [{title}]({path}) NEW❗️（{view_count}）\n')
         if rank == limit:
             break
 
