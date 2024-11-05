@@ -113,7 +113,6 @@ def append_trending_ranking_to_markdown(top_rising_pages) -> None:
             f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`'
             '（每日下午 3 點更新）\n'
         )
-        f.write('Source code：[blog-post-ranking](https://github.com/kyomind/blog-post-ranking)')
 
 
 def export_accumulative_ranking_to_csv(page_views) -> None:
