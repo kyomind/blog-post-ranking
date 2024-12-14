@@ -109,10 +109,7 @@ def append_trending_ranking_to_markdown(top_rising_pages) -> None:
         for rank, (path, title, change) in enumerate(top_rising_pages, start=1):
             f.write(f'{rank}. [{title}]({path})（{change}）\n')
 
-        f.write(
-            f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`'
-            '（每日下午 3 點更新）\n'
-        )
+        f.write(f'\n最後更新時間：`{datetime.datetime.now().strftime("%Y/%m/%d %H:%M")}`')
 
 
 def export_accumulative_ranking_to_csv(page_views) -> None:
