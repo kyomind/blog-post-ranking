@@ -23,7 +23,7 @@ requires = ["poetry-core"]
 [tool.ruff]
 line-length = 100
 select = ["E", "F", "W", "I", "UP"]
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.format]
 quote-style = "single"
