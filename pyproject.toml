@@ -3,8 +3,6 @@ authors = ["kyo <odinxp@gmail.com>"]
 description = ""
 license = "MIT"
 name = "blog-post-ranking"
-packages = [{include = "blog_post_ranking"}]
-readme = "README.md"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
