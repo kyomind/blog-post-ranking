@@ -3,6 +3,7 @@ import datetime
 import logging
 import os
 import pathlib
+import time
 from collections import deque
 
 from dotenv import load_dotenv
@@ -28,6 +29,24 @@ credentials = service_account.Credentials.from_service_account_file(
 client = BetaAnalyticsDataClient(credentials=credentials)
 
 
+def retry_get_raw_page_views(client, start_date, end_date, limit, max_retries=3, delay=5):
+    """
+    加入重試機制的 get_raw_page_views 包裝函式。
+    """
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            return get_raw_page_views(
+                client=client, start_date=start_date, end_date=end_date, limit=limit
+            )
+        except Exception as e:
+            logger.warning(f'第 {attempt} 次呼叫 get_raw_page_views 失敗: {e}')
+            if attempt == max_retries:
+                logger.error('已達最大重試次數，放棄執行。')
+                raise
+            time.sleep(delay)
+
+
 def get_processed_page_views(client, start_date, end_date, limit) -> list[tuple]:
     """
     Get the processed page views data.
@@ -48,7 +67,7 @@ def get_processed_page_views(client, start_date, end_date, limit) -> list[tuple]
         ('/path/to/page/3/', 'Page Title 3', 100),
     ]
     """
-    raw_page_views = get_raw_page_views(
+    raw_page_views = retry_get_raw_page_views(
         client=client, start_date=start_date, end_date=end_date, limit=limit
     )
     return filter_and_format_page_views(page_views=raw_page_views, threshold=20)
