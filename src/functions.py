@@ -177,7 +177,7 @@ def _write_views_to_csv(prev_views: dict, recent_views: dict, file_name: str = '
             if path in recent_views:
                 f.write(f'{title}, {views}, {recent_views[path][1]}, ')
                 f.write(f'{recent_views[path][1] - views}, ')
-                f.write(f'{((recent_views[path][1] - views)/views)*100:.2f}%\n')
+                f.write(f'{((recent_views[path][1] - views) / views) * 100:.2f}%\n')
 
 
 def find_top_trending_pages(prev_views, recent_views, limit=10) -> list[tuple[str, str, str]]:
